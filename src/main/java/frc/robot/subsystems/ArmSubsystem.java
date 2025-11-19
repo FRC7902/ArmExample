@@ -120,8 +120,8 @@ public class ArmSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("arm/info/Position (rotations)", getArmPositionDegrees() / 360);
-    SmartDashboard.putNumber("arm/info/Setpoint (rotations)", getArmSetpointDegrees() / 360);
+    SmartDashboard.putNumber("arm/info/Position (rotations)", Units.degreesToRotations(getArmPositionDegrees()));
+    SmartDashboard.putNumber("arm/info/Setpoint (rotations)", Units.degreesToRotations(getArmSetpointDegrees()));
 
     SmartDashboard.putNumber("arm/info/Position (Degrees)", getArmPositionDegrees());
     SmartDashboard.putNumber("arm/info/Setpoint (Degrees)", getArmSetpointDegrees());
@@ -140,13 +140,13 @@ public class ArmSubsystem extends SubsystemBase {
     m_armSim.update(0.02);
 
     // Set the rotor position and velocity using the physics simulation
-    double rotorPosition = (m_armSim.getAngleRads() / (2.0 * Math.PI)) * ArmConstants.ARM_GEARING;
-    double rotorVelocity = (m_armSim.getVelocityRadPerSec() / (2.0 * Math.PI)) * ArmConstants.ARM_GEARING;
+    double rotorPosition = Units.radiansToRotations(m_armSim.getAngleRads()) * ArmConstants.ARM_GEARING;
+    double rotorVelocity = Units.radiansToRotations(m_armSim.getVelocityRadPerSec()) * ArmConstants.ARM_GEARING;
     m_armMotorSim.setRawRotorPosition(rotorPosition);
     m_armMotorSim.setRotorVelocity(rotorVelocity);
 
     // Set the ligament angle to the physics simulation angle
-    m_ligament.setAngle(m_armSim.getAngleRads() * (180 / Math.PI));
+    m_ligament.setAngle(Units.radiansToDegrees(m_armSim.getAngleRads()));
   }
 
   /**
@@ -154,7 +154,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return the position of the arm motor in degrees
    */
   public double getArmPositionDegrees() {
-    return m_armMotor.getPosition().getValueAsDouble();
+    return Units.degreesToRotations(m_armMotor.getPosition().getValueAsDouble());
   }
 
   /**
@@ -162,7 +162,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return the setpoint of the arm motor in degrees
    */
   public double getArmSetpointDegrees() {
-    return m_armMotor.getClosedLoopReference().getValueAsDouble();
+    return Units.degreesToRotations(m_armMotor.getClosedLoopReference().getValueAsDouble());
   }
 
   /**
@@ -185,7 +185,7 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     // Set motor control
-    m_armMotorControl.Position = (degrees/360);
+    m_armMotorControl.Position = Units.degreesToRotations(degrees);
     m_armMotorControl.Slot = 0;
     m_armMotor.setControl(m_armMotorControl);
   }
