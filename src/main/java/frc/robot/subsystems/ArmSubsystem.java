@@ -154,7 +154,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return the position of the arm motor in degrees
    */
   public double getArmPositionDegrees() {
-    return Units.degreesToRotations(m_armMotor.getPosition().getValueAsDouble());
+    return Units.rotationsToDegrees(m_armMotor.getPosition().getValueAsDouble());
   }
 
   /**
@@ -162,7 +162,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return the setpoint of the arm motor in degrees
    */
   public double getArmSetpointDegrees() {
-    return Units.degreesToRotations(m_armMotor.getClosedLoopReference().getValueAsDouble());
+    return Units.rotationsToDegrees(m_armMotor.getClosedLoopReference().getValueAsDouble());
   }
 
   /**
