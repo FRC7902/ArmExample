@@ -132,20 +132,20 @@ public class ArmSubsystem extends SubsystemBase {
 
   @Override
   public void simulationPeriodic() {
+    // Set supply voltage
     m_armMotorSim.setSupplyVoltage(12);
 
     // Feed motor voltage into WPILib physics sim
     m_armSim.setInput(m_armMotorSim.getMotorVoltage());
     m_armSim.update(0.02);
 
-    // Convert mechanism angle to rotor rotations
-
+    // Set the rotor position and velocity using the physics simulation
     double rotorPosition = (m_armSim.getAngleRads() / (2.0 * Math.PI)) * ArmConstants.ARM_GEARING;
     double rotorVelocity = (m_armSim.getVelocityRadPerSec() / (2.0 * Math.PI)) * ArmConstants.ARM_GEARING;
-
     m_armMotorSim.setRawRotorPosition(rotorPosition);
     m_armMotorSim.setRotorVelocity(rotorVelocity);
 
+    // Set the ligament angle to the physics simulation angle
     m_ligament.setAngle(m_armSim.getAngleRads() * (180 / Math.PI));
   }
 
