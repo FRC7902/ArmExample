@@ -8,11 +8,13 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -39,6 +41,16 @@ public class ArmSubsystem extends SubsystemBase {
    * The simulation state object for the arm motor
    */
   private final TalonFXSimState m_armMotorSim = m_armMotor.getSimState();
+
+  /**
+   * The CANCoder object for the encoder
+   */
+  private final CANcoder m_armEncoder = new CANcoder(ArmConstants.ARM_ENCODER_CAN_ID);
+
+  /**
+   * The simulation state for the CANCoder
+   */
+  private final CANcoderSimState m_armEncoderSim = m_armEncoder.getSimState();
 
   /**
    * The MotionMagicVoltage request object to control the arm motor
@@ -104,10 +116,12 @@ public class ArmSubsystem extends SubsystemBase {
     m_armMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 20;
 
     // Gear ratio for the mechanism
-    m_armMotorConfig.Feedback.SensorToMechanismRatio = ArmConstants.ARM_GEARING;
+    m_armMotorConfig.Feedback.SensorToMechanismRatio = 1;
 
     // The system will use the motor's internal encoder as a reference for PID
-    m_armMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+    m_armMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    // Specify which remote sensor to use
+    m_armMotorConfig.Feedback.FeedbackRemoteSensorID = ArmConstants.ARM_ENCODER_CAN_ID;
 
     // When the motor is unpowered, oppose external movement
     m_armMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -141,8 +155,10 @@ public class ArmSubsystem extends SubsystemBase {
 
     // Set the rotor position and velocity using the physics simulation
     double rotorPosition = Units.radiansToRotations(m_armSim.getAngleRads()) * ArmConstants.ARM_GEARING;
+    double encoderPosition = Units.radiansToRotations(m_armSim.getAngleRads());
     double rotorVelocity = Units.radiansToRotations(m_armSim.getVelocityRadPerSec()) * ArmConstants.ARM_GEARING;
     m_armMotorSim.setRawRotorPosition(rotorPosition);
+    m_armEncoderSim.setRawPosition(encoderPosition);
     m_armMotorSim.setRotorVelocity(rotorVelocity);
 
     // Set the ligament angle to the physics simulation angle
@@ -154,7 +170,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return the position of the arm motor in degrees
    */
   public double getArmPositionDegrees() {
-    return Units.degreesToRotations(m_armMotor.getPosition().getValueAsDouble());
+    return Units.rotationsToDegrees(m_armMotor.getPosition().getValueAsDouble());
   }
 
   /**
@@ -162,7 +178,7 @@ public class ArmSubsystem extends SubsystemBase {
    * @return the setpoint of the arm motor in degrees
    */
   public double getArmSetpointDegrees() {
-    return Units.degreesToRotations(m_armMotor.getClosedLoopReference().getValueAsDouble());
+    return Units.rotationsToDegrees(m_armMotor.getClosedLoopReference().getValueAsDouble());
   }
 
   /**

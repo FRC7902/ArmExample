@@ -18,6 +18,7 @@ public final class Constants {
   }
   public static class ArmConstants {
     public static final int ARM_MOTOR_CAN_ID = 1;
+    public static final int ARM_ENCODER_CAN_ID = 2;
 
     public static final double ARM_LENGTH_METERS = 0.3;
     public static final double ARM_MASS_KG = 3.5;
