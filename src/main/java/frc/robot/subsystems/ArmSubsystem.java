@@ -46,11 +46,6 @@ public class ArmSubsystem extends SubsystemBase {
   private final MotionMagicVoltage m_armMotorControl = new MotionMagicVoltage(0);
 
   /**
-   * The TalonFX configuration object
-   */
-  private final TalonFXConfiguration m_armMotorConfig = new TalonFXConfiguration();
-
-  /**
    * The Mechanism2d instance to simulate the arm
    */
   private final Mechanism2d m_mech2d = new Mechanism2d(
@@ -87,41 +82,40 @@ public class ArmSubsystem extends SubsystemBase {
   /** Creates a new ArmSubsystem. */
   public ArmSubsystem() {
     // Configure the motor's Slot0 control config
-    Slot0Configs configs = m_armMotorConfig.Slot0;
+    TalonFXConfiguration configs = new TalonFXConfiguration();
     // Set PID
-    configs.kP = ArmConstants.ARM_KP;
-    configs.kI = ArmConstants.ARM_KI;
-    configs.kD = ArmConstants.ARM_KD;
-    configs.GravityType = GravityTypeValue.Arm_Cosine;
+    configs.Slot0.kP = ArmConstants.ARM_KP;
+    configs.Slot0.kI = ArmConstants.ARM_KI;
+    configs.Slot0.kD = ArmConstants.ARM_KD;
+    configs.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
 
     // Current limits ensure that the motor does not take too much power to preserve it and avoid brownout
-    CurrentLimitsConfigs currentLimits = m_armMotorConfig.CurrentLimits;
-    currentLimits.StatorCurrentLimit = ArmConstants.STATOR_CURRENT_LIMIT;
-    currentLimits.SupplyCurrentLimit = ArmConstants.SUPPLY_CURRENT_LIMIT;
+    configs.CurrentLimits.StatorCurrentLimit = ArmConstants.STATOR_CURRENT_LIMIT;
+    configs.CurrentLimits.SupplyCurrentLimit = ArmConstants.SUPPLY_CURRENT_LIMIT;
 
     // Set MotionMagic control parameters
-    m_armMotorConfig.MotionMagic.MotionMagicAcceleration = 20;
-    m_armMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 20;
+    configs.MotionMagic.MotionMagicAcceleration = ArmConstants.MOTION_MAGIC_ACCEL;
+    configs.MotionMagic.MotionMagicCruiseVelocity = ArmConstants.MOTION_MAGIC_CRUISE;
 
     // Gear ratio for the mechanism
-    m_armMotorConfig.Feedback.SensorToMechanismRatio = ArmConstants.ARM_GEARING;
+    configs.Feedback.SensorToMechanismRatio = ArmConstants.ARM_GEARING;
 
     // The system will use the motor's internal encoder as a reference for PID
-    m_armMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+    configs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
 
     // When the motor is unpowered, oppose external movement
-    m_armMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    configs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     // Invert the direction of the motor
-    m_armMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    configs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    m_armMotor.getConfigurator().apply(m_armMotorConfig);
+    m_armMotor.getConfigurator().apply(configs);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    SmartDashboard.putNumber("arm/info/Position (rotations)", getArmPositionDegrees() / 360);
-    SmartDashboard.putNumber("arm/info/Setpoint (rotations)", getArmSetpointDegrees() / 360);
+    SmartDashboard.putNumber("arm/info/Position (rotations)", Units.degreesToRotations(getArmPositionDegrees()));
+    SmartDashboard.putNumber("arm/info/Setpoint (rotations)", Units.degreesToRotations(getArmSetpointDegrees()));
 
     SmartDashboard.putNumber("arm/info/Position (Degrees)", getArmPositionDegrees());
     SmartDashboard.putNumber("arm/info/Setpoint (Degrees)", getArmSetpointDegrees());
@@ -140,13 +134,13 @@ public class ArmSubsystem extends SubsystemBase {
     m_armSim.update(0.02);
 
     // Set the rotor position and velocity using the physics simulation
-    double rotorPosition = (m_armSim.getAngleRads() / (2.0 * Math.PI)) * ArmConstants.ARM_GEARING;
-    double rotorVelocity = (m_armSim.getVelocityRadPerSec() / (2.0 * Math.PI)) * ArmConstants.ARM_GEARING;
+    double rotorPosition = Units.radiansToRotations(m_armSim.getAngleRads()) * ArmConstants.ARM_GEARING;
+    double rotorVelocity = Units.radiansToRotations(m_armSim.getVelocityRadPerSec()) * ArmConstants.ARM_GEARING;
     m_armMotorSim.setRawRotorPosition(rotorPosition);
     m_armMotorSim.setRotorVelocity(rotorVelocity);
 
     // Set the ligament angle to the physics simulation angle
-    m_ligament.setAngle(m_armSim.getAngleRads() * (180 / Math.PI));
+    m_ligament.setAngle(Units.radiansToDegrees(m_armSim.getAngleRads()));
   }
 
   /**
@@ -185,7 +179,7 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     // Set motor control
-    m_armMotorControl.Position = (degrees/360);
+    m_armMotorControl.Position = Units.degreesToRotations(degrees);
     m_armMotorControl.Slot = 0;
     m_armMotor.setControl(m_armMotorControl);
   }

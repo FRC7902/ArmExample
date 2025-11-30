@@ -1,5 +1,5 @@
 # Arm Subsystem Example
-Use this as a reference when programming and arm in the future!
+Use this as a reference when programming an arm in the future!
 
 ## What it does:
 This is just a full, can be simulated, arm subsystem in WPILib. It contains all the information you should know

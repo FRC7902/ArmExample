@@ -26,6 +26,9 @@ public final class Constants {
     public static final double ARM_MAX_ANGLE_DEGREES = 180.0;
     public static final double ARM_MIN_ANGLE_DEGREES = 0.0;
 
+    public static final double MOTION_MAGIC_CRUISE  = 20;
+    public static final double MOTION_MAGIC_ACCEL = 20;
+
     public static final double ARM_KP = 50;
     public static final double ARM_KI = 0;
     public static final double ARM_KD = 0;
